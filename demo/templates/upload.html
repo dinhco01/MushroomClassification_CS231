@@ -1,0 +1,190 @@
+<!doctype html>
+<html>
+	<head>
+		<title>Demo CS231.M11</title>
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"
+			integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+		<link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet" />
+		<!-- <script src="{{ url_for('static', filename='script.js') }}" ></script> -->
+		<!-- <link rel="stylesheet" href="{{ url_for('static', filename='styles.scss') }}"> -->
+	</head>
+	<style>
+		h2 { color: green;
+			font-family: 'Source Sans Pro', sans-serif;
+			text-align: center;
+			font-size: 28px;
+			font-weight: 400;
+			line-height: 32px;
+			margin: 0 0 24px; }
+		p {text-align: center;}
+		div {text-align: center;}
+	</style>
+	<body style="text-align: center;">
+		<style>
+			h1 { color: #3667e4;
+				font-family: 'Trocchi', serif;
+				font-size: 45px;
+				font-weight: bold;
+				padding: 5px;
+				margin: auto 2px;
+				text-align: center;
+				line-height: 48px; margin: 0; }
+			form{
+				margin: 15px 2px;
+			}
+			div{
+				text-align: center;
+			}
+		</style>
+		<h1 >Dự đoán nấm độc</h1>
+		<p>
+			{% with messages = get_flashed_messages() %}
+				{% if messages %}
+				<ul class=flashes>
+				{% for message in messages %}
+					<li>{{ message }}</li>
+				{% endfor %}
+				</ul>
+				{% endif %}
+			{% endwith %}
+		</p>
+
+		<form method="post" action="/" enctype="multipart/form-data">
+			<style>
+				input[type=file]{
+					width: 500px;
+					height: 100px;
+					text-align: center;
+					padding: 5px;
+					border-radius: 7px;
+					background-color: #b6b8bb;
+					border: none;
+					color: #fff;
+					text-decoration: none;
+					cursor: pointer;
+					margin: auto;
+				}
+				input[type=submit] {
+					width: 150px;
+					height: 35px;
+					text-align: center;
+					padding: 5px;
+					border-radius: 7px;
+					background-color: #3667e4;
+					border: none;
+					color: #fff;
+					text-decoration: none;
+					margin: 15px 2px;
+					cursor: pointer;
+				}
+				
+				</style>
+				<div>
+					<style>
+						div{
+							margin: 15px 2px;
+						}
+					</style>
+		
+					<div>
+						<label for="model-selection">Lựa chọn mô hình:</label>
+						<select name="model_selected" id="model_selected" class="p-4 bg-gray-100 rounded-md">
+							<option value="VGG16">VGG16</option>
+							<option value="ResNet50">ResNet50</option>
+							<option value="EfficentNet">EfficentNet</option>
+						</select>
+					</div>
+		
+					<div>
+						<label for="type-predict-selection" >Kiểu dự đoán:</label>
+						<select name="type_predict_selected" id="type_predict_selected" class="p-4 bg-gray-100 rounded-md">
+							<option value="base_2_type">Nấm ăn được hoặc nấm độc</option>
+							<option value="base_11_type">Nấm ăn được và loại nấm nếu là nấm độc</option>
+						</select>
+					</div>
+					
+				</div>
+
+				<dl>
+					<p style="text-align: center;">
+						<label for="image-select" style="text-align: center;">Chọn một hoặc nhiều hình ảnh để dự đoán:</label>
+						<input type="file" accept="image/*" name="files[]" multiple="true" autocomplete="off" required>
+					</p>
+				</dl>
+			<p>
+				<input type="submit" value="Dự đoán">
+			</p>
+		</form>
+		{% if result_predicts %}
+			<div style="text-align: center; clear: both;">
+				<div>
+					{% if model_selected %}
+						<h2 style="font-weight: bold;">Kết quả dự đoán - {{model_selected}}</h1>
+					{% endif %}
+				</div>
+				<div style="text-align: center;">
+					<style type="text/css">
+						.grid-container{
+							display: block;
+							clear: both;
+							text-align: center;
+						}
+
+						.grid {
+							display: block;
+							overflow: hidden;
+							float: left;
+							width: auto;
+							height: auto;
+							margin: 5px 5px;
+							text-align: center;
+							padding-top: auto;
+							padding-bottom: auto;
+						}
+
+
+						.grid img{
+							display: block;
+							max-width:310px;
+							max-height:310px;
+							width: auto;
+							height: auto;
+							text-align: center;
+							margin: auto;
+						}
+
+						.grid .info p{
+							margin: 0px;
+							padding: 0px; 
+						}
+					</style>
+					<div class="grid-container">
+					{% for result_predict in result_predicts %}
+					<div class="grid">
+						<img style="text-align: bottom;" src=" {{url_for('display_image', filename=result_predict.filename)}}">
+						<div class="info">
+							<p style="color: gray;">Hình {{result_predict.filename}}</p>
+							{% if result_predict.class != 0 %}
+								{% if type_class == "base_11_type" %}
+									<p style="color: red; font-weight: bold;">Nấm độc - {{result_predict.name}}</p>
+									<a style="color: blue;" href="https://www.google.com/search?tbm=isch&q={{result_predict.name}}" target="_blank">Xem thêm hình ảnh</a>
+								{% endif %}
+
+								{% if type_class == "base_2_type" %}
+									<p style="color: red; font-weight: bold;">Nấm độc</p>
+								{% endif %}
+							{% endif %}
+
+							{% if result_predict.class == 0 %}
+								<p style="color: green; font-weight: bold;">Nấm ăn được</p>
+							{% endif %}
+							<p style="color: black;">Xác suất: {{result_predict.prob}}</p>
+						</div>
+					</div>
+					{% endfor %}
+					</div>
+				</div>
+			</div>
+		{% endif %}
+	</body>
+</html>
